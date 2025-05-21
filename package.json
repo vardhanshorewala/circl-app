@@ -12,11 +12,14 @@
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "preview": "next build && next start",
+    "seed-db": "bun scripts/seed-db.ts",
     "start": "next start",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@t3-oss/env-nextjs": "^0.12.0",
+    "dotenv": "^16.5.0",
+    "neo4j-driver": "^5.28.1",
     "next": "^15.2.3",
     "next-auth": "5.0.0-beta.25",
     "react": "^19.0.0",
