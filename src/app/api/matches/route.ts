@@ -23,8 +23,8 @@ export async function GET(request: Request) {
     try {
       potentialMatches = await Neo4jUserClient.findPotentialMatches(
         userId,
-        3,  // max degree
-        2   // min degree
+        1,  // max degree
+        1   // min degree
       );
       
       console.log(`Found ${potentialMatches.length} potential matches from Neo4j`);
@@ -72,6 +72,21 @@ export async function GET(request: Request) {
         // Skip this match but continue with others
       }
     }
+
+    // Debug logging of all matches
+    console.log('\n======= MATCH DEBUGGING INFO =======');
+    console.log(`User: ${email} (ID: ${userId})`);
+    console.log(`Total matches found: ${matchesWithDegree.length}`);
+    
+    if (matchesWithDegree.length > 0) {
+      console.log('\nMatched users:');
+      matchesWithDegree.forEach((match, index) => {
+        console.log(`${index + 1}. ${match.name} (${match.email}) - Degree: ${match.degree}`);
+      });
+    } else {
+      console.log('No matches found for this user');
+    }
+    console.log('====================================\n');
 
     return NextResponse.json({
       userId,

@@ -356,21 +356,46 @@ export class Neo4jUserClient {
       const intMaxDegree = Math.floor(maxDegree);
       const intLimit = Math.floor(limit);
       
-      const result = await session.executeRead(async tx => {
-        return await tx.run(
-          `
-          MATCH (u:User {id: $userId})
-          MATCH path = (u)-[:CONNECTED_TO*${intMinDegree}..${intMaxDegree} {status: 'ACCEPTED'}]->(potential:User)
-          WHERE NOT (u)-[:CONNECTED_TO]->(potential)
-            AND u.id <> potential.id
-          WITH potential, length(path) AS degree
-          ORDER BY degree
-          LIMIT $limit
-          RETURN potential, degree
-          `,
-          { userId, limit: neo4j.int(intLimit) }
-        );
-      });
+      console.log(`\nFinding potential matches for user ID: ${userId}`);
+      console.log(`Search criteria: minDegree=${intMinDegree}, maxDegree=${intMaxDegree}, limit=${intLimit}`);
+      
+      // For first-degree connections, use a direct query
+      let result;
+      if (intMinDegree === 1 && intMaxDegree === 1) {
+        console.log('Using direct connection query for first-degree connections');
+        result = await session.executeRead(async tx => {
+          return await tx.run(
+            `
+            MATCH (u:User {id: $userId})-[r:CONNECTED_TO {status: 'ACCEPTED'}]->(friend:User)
+            RETURN friend as potential, 1 as degree
+            LIMIT $limit
+            `,
+            { userId, limit: neo4j.int(intLimit) }
+          );
+        });
+      } else {
+        // For other degree ranges, use the variable path pattern
+        result = await session.executeRead(async tx => {
+          return await tx.run(
+            `
+            MATCH (u:User {id: $userId})
+            MATCH path = (u)-[:CONNECTED_TO*${intMinDegree}..${intMaxDegree} {status: 'ACCEPTED'}]->(potential:User)
+            WHERE NOT (u)-[:CONNECTED_TO]->(potential)
+              AND u.id <> potential.id
+            WITH potential, length(path) AS degree
+            ORDER BY degree
+            LIMIT $limit
+            RETURN potential, degree
+            `,
+            { userId, limit: neo4j.int(intLimit) }
+          );
+        });
+      }
+      
+      console.log(`Query returned ${result.records.length} potential matches`);
+      if (result.records.length === 0) {
+        console.log('No potential matches found in database');
+      }
       
       return result.records.map(record => {
         const userNode = record.get('potential').properties;

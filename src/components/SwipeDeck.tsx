@@ -23,7 +23,7 @@ export default function SwipeDeck() {
         
         // Get email from auth session or local storage
         // For now using hardcoded email for example
-        const userEmail = 'user1@example.com';
+        const userEmail = 'user13@example.com';
         
         const response = await fetch(`/api/matches?email=${encodeURIComponent(userEmail)}`);
         const data = await response.json();
@@ -108,7 +108,7 @@ export default function SwipeDeck() {
         body: JSON.stringify({
           targetEmail: currentUser.email,
           // In a real app, you'd get the sourceEmail from auth context
-          sourceEmail: 'user1@example.com'
+          sourceEmail: 'user2@example.com'
         }),
       });
       
