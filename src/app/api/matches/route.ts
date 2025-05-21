@@ -23,8 +23,8 @@ export async function GET(request: Request) {
     try {
       potentialMatches = await Neo4jUserClient.findPotentialMatches(
         userId,
-        1,  // max degree
-        1   // min degree
+        3,  // max degree
+        2   // min degree
       );
       
       console.log(`Found ${potentialMatches.length} potential matches from Neo4j`);
@@ -34,10 +34,19 @@ export async function GET(request: Request) {
     }
     
 
-    // Add connection degree to matches
+    // Add connection degree to matches and deduplicate
     const matchesWithDegree = [];
+    const uniqueEmails = new Set(); // Track unique emails to avoid duplicates
     
     for (const match of potentialMatches) {
+      // Skip duplicates
+      if (uniqueEmails.has(match.email)) {
+        console.log(`Skipping duplicate user: ${match.email}`);
+        continue;
+      }
+      
+      // Add to tracking set
+      uniqueEmails.add(match.email);
       try {
         // Try to get the actual degree from Neo4j
         let degree = 2; // Default to 2nd degree

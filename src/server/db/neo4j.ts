@@ -367,7 +367,7 @@ export class Neo4jUserClient {
           return await tx.run(
             `
             MATCH (u:User {id: $userId})-[r:CONNECTED_TO {status: 'ACCEPTED'}]->(friend:User)
-            RETURN friend as potential, 1 as degree
+            RETURN DISTINCT friend as potential, 1 as degree
             LIMIT $limit
             `,
             { userId, limit: neo4j.int(intLimit) }
@@ -382,7 +382,7 @@ export class Neo4jUserClient {
             MATCH path = (u)-[:CONNECTED_TO*${intMinDegree}..${intMaxDegree} {status: 'ACCEPTED'}]->(potential:User)
             WHERE NOT (u)-[:CONNECTED_TO]->(potential)
               AND u.id <> potential.id
-            WITH potential, length(path) AS degree
+            WITH DISTINCT potential, length(path) AS degree
             ORDER BY degree
             LIMIT $limit
             RETURN potential, degree
